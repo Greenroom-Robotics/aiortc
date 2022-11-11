@@ -1,2 +1,2 @@
 [build-system]
-requires = ["cffi>=1.0.0", "setuptools", "wheel"]
+requires = ["cffi==1.5.0", "setuptools", "wheel"]

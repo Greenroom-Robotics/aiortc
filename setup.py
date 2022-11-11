@@ -65,7 +65,7 @@ setuptools.setup(
     cffi_modules=cffi_modules,
     package_dir={"": "src"},
     packages=["aiortc", "aiortc.codecs", "aiortc.contrib"],
-    setup_requires=["cffi>=1.0.0"],
+    setup_requires=["cffi==1.5.0"],
     install_requires=install_requires,
     extras_require=extras_require,
 )
