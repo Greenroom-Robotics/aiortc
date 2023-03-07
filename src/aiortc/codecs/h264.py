@@ -1,9 +1,10 @@
 import fractions
 import logging
 import math
+import json
 from itertools import tee
 from struct import pack, unpack_from
-from typing import Iterator, List, Optional, Sequence, Tuple, Type, TypeVar
+from typing import Iterator, List, Optional, Sequence, Tuple, Type, TypeVar, Dict
 
 import av
 from av.frame import Frame
@@ -124,7 +125,15 @@ class H264Decoder(Decoder):
 
 
 def create_encoder_context(
-    codec_name: str, width: int, height: int, bitrate: int
+    codec_name: str, 
+    width: int, 
+    height: int, 
+    bitrate: int, 
+    options: Optional[Dict[str, str]] = {
+        "profile": "main",
+        "level": "31",
+        'preset': 'fast',
+    }
 ) -> av.CodecContext:
     codec = av.CodecContext.create(codec_name, "w")
     codec.width = width
@@ -133,11 +142,7 @@ def create_encoder_context(
     codec.pix_fmt = "nv12"
     codec.framerate = fractions.Fraction(MAX_FRAME_RATE, 1)
     codec.time_base = fractions.Fraction(1, MAX_FRAME_RATE)
-    codec.options = {
-        "profile": "main",
-        "level": "31",
-        'preset': 'fast',
-    }
+    codec.options = options
 
     if codec_name == 'libx264':
         codec.options.update({
@@ -302,9 +307,11 @@ class H264Encoder(Encoder):
 
         if self.codec is None:
             encoder = os.environ.get('AIORTC_ENCODER_OVERRIDE', "h264_omx")
+            options_raw = os.environ.get('AIORTC_ENCODER_OPTIONS_OVERRIDE')
+            options: Optional[Dict[str, str]] = json.loads(options_raw) if options_raw else None
             try:
                 self.codec = create_encoder_context(
-                    encoder, frame.width, frame.height, bitrate=self.target_bitrate
+                    encoder, frame.width, frame.height, bitrate=self.target_bitrate, options=options
                 )
                 self.codec_buffering = True  # not sure what this is doing
             except Exception:
